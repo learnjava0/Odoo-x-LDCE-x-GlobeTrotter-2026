@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar.jsx';
 import Navbar from './Navbar.jsx';
+import { useTheme } from '../../context/ThemeContext.jsx';
 
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isDark } = useTheme();
 
   return (
-    <div className="flex min-h-screen bg-[#F8F7F3]">
+    <div className={`flex min-h-screen transition-colors ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-[#F8F7F3] text-gray-800'}`}>
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
