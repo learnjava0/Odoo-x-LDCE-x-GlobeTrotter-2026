@@ -1,86 +1,159 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { MapPin, Calendar, Plus, GripVertical, Search, ArrowRight } from 'lucide-react';
-import { trips, cities, activities } from '../data/mockData';
+import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Plus, Calendar, DollarSign, Edit3, Trash2, ArrowRight, Sparkles, MapPin, Hotel, Plane, Compass } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext.jsx';
+import { trips } from '../data/mockData';
+
+const INITIAL_SECTIONS = [
+  {
+    id: 1,
+    title: 'Section 1: Flight & Airport Transfers',
+    description: 'All the necessary information about this section. This can be anything like travel section, hotel or any other activity. Includes roundtrip flights to Paris CDG and private airport shuttle.',
+    dateRange: 'Jul 15 to Jul 16, 2026',
+    budget: '$850.00',
+    icon: Plane,
+  },
+  {
+    id: 2,
+    title: 'Section 2: Hotel & Luxury Accommodation',
+    description: 'All the necessary information about this section. This can be anything like travel section, hotel or any other activity. 5-night stay at Le Marais Boutique Hotel with daily breakfast.',
+    dateRange: 'Jul 16 to Jul 21, 2026',
+    budget: '$1,200.00',
+    icon: Hotel,
+  },
+  {
+    id: 3,
+    title: 'Section 3: Sightseeing, Museums & Dining',
+    description: 'All the necessary information about this section. This can be anything like travel section, hotel or any other activity. Louvre Museum guided tour, Eiffel Tower dinner, and Seine cruise.',
+    dateRange: 'Jul 17 to Jul 20, 2026',
+    budget: '$450.00',
+    icon: Compass,
+  },
+];
 
 export default function ItineraryBuilderPage() {
   const navigate = useNavigate();
-  const trip = trips[0]; // Mock: first trip
-  const tripStops = trip.stops.map(s => ({ ...s, city: cities.find(c => c.id === s.cityId) }));
+  const { tripId } = useParams();
+  const { isDark } = useTheme();
+  const [sections, setSections] = useState(INITIAL_SECTIONS);
+
+  const addSection = () => {
+    const nextNum = sections.length + 1;
+    const newSection = {
+      id: Date.now(),
+      title: `Section ${nextNum}: New Travel Section / Activity`,
+      description: 'All the necessary information about this section. This can be anything like travel section, hotel or any other activity.',
+      dateRange: 'Jul 21 to Jul 25, 2026',
+      budget: '$300.00',
+      icon: MapPin,
+    };
+    setSections([...sections, newSection]);
+  };
+
+  const removeSection = (id) => {
+    setSections(sections.filter(s => s.id !== id));
+  };
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="animate-fade-in max-w-4xl mx-auto space-y-8 pb-16">
+      
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">{trip.name}</h1>
-          <p className="text-[13px] text-gray-400 mt-1">{trip.startDate} → {trip.endDate} • {trip.stops.length} stops</p>
+          <h1 className={`text-3xl font-black tracking-tight flex items-center gap-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-2.5 rounded-2xl text-white shadow-lg shadow-amber-500/20">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            Build Itinerary Screen
+          </h1>
+          <p className={`text-sm mt-1.5 ml-14 ${isDark ? 'text-slate-400' : 'text-gray-400'}`}>
+            Organize your trip into structured sections for travel, hotels, and activities
+          </p>
         </div>
-        <button onClick={() => navigate(`/itinerary/${trip.id}`)} className="px-5 py-2.5 bg-amber-50 text-amber-700 font-semibold rounded-xl hover:bg-amber-100 text-[13px] transition-colors flex items-center gap-2">
-          Preview <ArrowRight className="w-3.5 h-3.5" />
+
+        <button
+          onClick={() => navigate(`/itinerary/${tripId || 1}`)}
+          className={`px-5 py-2.5 font-bold rounded-2xl transition-colors flex items-center gap-2 text-sm ${
+            isDark ? 'bg-slate-800 text-amber-400 hover:bg-slate-700' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+          }`}
+        >
+          View Full Timeline <ArrowRight className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Stops List */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-bold text-gray-800 text-[15px]">Trip Stops</h2>
-            <button className="text-[13px] text-amber-600 font-semibold hover:text-amber-700 flex items-center gap-1">
-              <Plus className="w-3.5 h-3.5" /> Add Stop
-            </button>
-          </div>
-          {tripStops.map((stop, i) => {
-            const stopActivities = activities.filter(a => a.cityId === stop.cityId).slice(0, 3);
-            return (
-              <div key={stop.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-50 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <div className="pt-1 cursor-grab text-gray-300 hover:text-gray-400"><GripVertical className="w-5 h-5" /></div>
-                  <img src={stop.city?.imageUrl} alt={stop.city?.name} className="w-20 h-20 rounded-xl object-cover shrink-0" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="bg-amber-100 text-amber-700 text-[11px] font-bold px-2 py-0.5 rounded-full">Stop {i + 1}</span>
-                    </div>
-                    <h3 className="font-bold text-gray-900 text-[15px]">{stop.city?.name}, {stop.city?.country}</h3>
-                    <div className="flex items-center gap-4 mt-1.5 text-[12px] text-gray-400">
-                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{stop.startDate} → {stop.endDate}</span>
-                      <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />${stop.city?.costIndex}/day</span>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {stopActivities.map(act => (
-                        <span key={act.id} className="text-[11px] bg-gray-50 text-gray-600 px-3 py-1 rounded-full font-medium border border-gray-100">{act.name}</span>
-                      ))}
-                      <button className="text-[11px] bg-amber-50 text-amber-600 px-3 py-1 rounded-full font-semibold hover:bg-amber-100">+ Add</button>
-                    </div>
+      <div className="space-y-6">
+        {sections.map((section) => {
+          const Icon = section.icon || MapPin;
+          return (
+            <div
+              key={section.id}
+              className={`rounded-3xl p-8 shadow-sm border relative group space-y-4 transition-all ${
+                isDark ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-gray-100 text-gray-900'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2.5 rounded-2xl ${isDark ? 'bg-slate-800 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>
+                    <Icon className="w-5 h-5" />
                   </div>
+                  <h2 className={`text-xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {section.title}
+                  </h2>
+                </div>
+
+                <div className="flex items-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                  <button className="p-2 rounded-xl text-gray-400 hover:text-amber-500 hover:bg-amber-500/10 transition-colors">
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                  {sections.length > 1 && (
+                    <button
+                      onClick={() => removeSection(section.id)}
+                      className="p-2 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
-            );
-          })}
-        </div>
 
-        {/* Right: Quick City/Activity Search */}
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <h3 className="font-bold text-gray-800 text-[15px] mb-4">Quick Search</h3>
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input type="text" placeholder="Search cities or activities..." className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[13px] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" />
-            </div>
-            <div className="space-y-3">
-              {cities.slice(0, 5).map(city => (
-                <div key={city.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors">
-                  <img src={city.imageUrl} alt={city.name} className="w-10 h-10 rounded-lg object-cover" />
-                  <div className="flex-1">
-                    <p className="text-[13px] font-semibold text-gray-800">{city.name}</p>
-                    <p className="text-[11px] text-gray-400">{city.country} • ${city.costIndex}/day</p>
-                  </div>
-                  <Plus className="w-4 h-4 text-amber-500" />
+              <p className={`text-sm leading-relaxed font-normal ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                {section.description}
+              </p>
+
+              <div className={`pt-4 border-t flex flex-wrap items-center gap-4 ${isDark ? 'border-slate-800' : 'border-gray-50'}`}>
+                <div className={`flex items-center gap-2 px-4 py-2.5 border rounded-2xl text-xs font-semibold ${
+                  isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-gray-50 border-gray-100 text-gray-700'
+                }`}>
+                  <Calendar className="w-4 h-4 text-amber-500" />
+                  <span>Date Range: <strong className={isDark ? 'text-white' : 'text-gray-900'}>{section.dateRange}</strong></span>
                 </div>
-              ))}
+
+                <div className={`flex items-center gap-2 px-4 py-2.5 border rounded-2xl text-xs font-semibold ${
+                  isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-gray-50 border-gray-100 text-gray-700'
+                }`}>
+                  <DollarSign className="w-4 h-4 text-emerald-500" />
+                  <span>Budget of this section: <strong className="text-emerald-500">{section.budget}</strong></span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
+
+      <div className="flex justify-center pt-4">
+        <button
+          type="button"
+          onClick={addSection}
+          className={`py-4 px-8 border-2 border-dashed font-extrabold rounded-3xl shadow-sm transition-all flex items-center justify-center gap-2.5 text-base cursor-pointer hover:scale-105 ${
+            isDark
+              ? 'bg-slate-900 border-amber-500/50 text-amber-400 hover:bg-slate-800'
+              : 'bg-white border-amber-400 text-amber-600 hover:bg-amber-50'
+          }`}
+        >
+          <Plus className="w-5 h-5 stroke-[3]" />
+          Add another Section
+        </button>
+      </div>
+
     </div>
   );
 }
