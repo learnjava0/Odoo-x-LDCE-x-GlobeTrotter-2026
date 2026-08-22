@@ -1,166 +1,227 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Calendar, ArrowRight, Plus, Sparkles, TrendingUp } from 'lucide-react';
+import { Briefcase, MapPin, Activity, DollarSign, TrendingUp, TrendingDown, Minus, ArrowRight, MoreVertical } from 'lucide-react';
+import { PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { dashboardStats, trips, budgetBreakdown, upcomingActivities } from '../data/mockData';
 
-const FEATURED_TRIPS = [
-  {
-    id: 1,
-    name: "Summer in Paris & Rome",
-    dates: "Jul 15 - Jul 28, 2026",
-    stops: 2,
-    budget: "$2,400",
-    image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80",
-    tags: ["Culture", "Romantic"]
-  },
-  {
-    id: 2,
-    name: "Tokyo & Kyoto Autumn Tour",
-    dates: "Oct 10 - Oct 22, 2026",
-    stops: 3,
-    budget: "$3,100",
-    image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80",
-    tags: ["Adventure", "Foodie"]
-  },
-  {
-    id: 3,
-    name: "Amalfi Coast Explorations",
-    dates: "Sep 02 - Sep 09, 2026",
-    stops: 1,
-    budget: "$1,850",
-    image: "https://images.unsplash.com/photo-1486916856992-e4db22c8df33?auto=format&fit=crop&w=800&q=80",
-    tags: ["Beach", "Luxury"]
-  }
+const statCards = [
+  { label: 'Total Trips', value: dashboardStats.totalTrips, change: '+2 more than last quarter', trend: 'up', color: 'amber', icon: Briefcase },
+  { label: 'Cities Visited', value: dashboardStats.citiesVisited, change: '+3 more than last quarter', trend: 'up', color: 'green', icon: MapPin },
+  { label: 'Activities Planned', value: dashboardStats.activitiesPlanned, change: '+5 more than last quarter', trend: 'up', color: 'purple', icon: Activity },
+  { label: 'Total Budget', value: `$${(dashboardStats.totalBudget / 1000).toFixed(1)}K`, change: 'On track', trend: 'neutral', color: 'blue', icon: DollarSign },
 ];
+
+const colorMap = {
+  amber: { border: 'border-l-amber-500', bg: 'bg-amber-50', text: 'text-amber-600', iconBg: 'bg-amber-100' },
+  green: { border: 'border-l-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-600', iconBg: 'bg-emerald-100' },
+  purple: { border: 'border-l-purple-500', bg: 'bg-purple-50', text: 'text-purple-600', iconBg: 'bg-purple-100' },
+  blue: { border: 'border-l-blue-500', bg: 'bg-blue-50', text: 'text-blue-600', iconBg: 'bg-blue-100' },
+};
+
+const CHART_COLORS = ['#F59E0B', '#8B5CF6', '#3B82F6', '#10B981'];
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white px-3 py-2 rounded-lg shadow-lg border border-gray-100 text-xs">
+        <p className="font-semibold text-gray-700">{label}</p>
+        <p className="text-amber-600 font-bold">${payload[0].value}</p>
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-16">
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950 text-white py-24 px-8 md:px-16 text-center shadow-2xl">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.15),transparent_50%)]" />
-        
-        <div className="relative max-w-4xl mx-auto z-10">
-          <span className="inline-flex items-center gap-1.5 bg-indigo-500/20 text-indigo-300 font-semibold px-4 py-1.5 rounded-full text-xs uppercase tracking-wider mb-6 border border-indigo-400/25">
-            <Sparkles className="w-3.5 h-3.5" />
-            Empower Your Next Adventure
-          </span>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-none mb-6">
-            Plan Trips. Track Budgets.<br />
-            <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Wander Effortlessly.
-            </span>
-          </h1>
-          <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto mb-10 font-normal leading-relaxed">
-            Turn your messy travel spreadsheets and notes into a structured, visual itinerary. Build stops, organize activities, and watch your budget balance itself.
-          </p>
-
-          <div className="bg-white p-2 rounded-2xl shadow-xl max-w-xl mx-auto flex items-center border border-gray-100">
-            <div className="flex items-center flex-1 px-3">
-              <Search className="w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Where to next? (e.g. Paris, Tokyo...)"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent border-0 focus:outline-none focus:ring-0 text-gray-800 ml-2 placeholder-gray-400"
-              />
+    <div className="animate-fade-in space-y-8">
+      {/* Stat Cards Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        {statCards.map((card, i) => {
+          const colors = colorMap[card.color];
+          const Icon = card.icon;
+          return (
+            <div key={i} className={`bg-white rounded-2xl p-6 border-l-4 ${colors.border} shadow-sm hover:shadow-md transition-shadow`}>
+              <div className="flex items-start justify-between mb-4">
+                <div className={`p-2.5 rounded-xl ${colors.iconBg}`}>
+                  <Icon className={`w-5 h-5 ${colors.text}`} />
+                </div>
+              </div>
+              <p className="text-3xl font-extrabold text-gray-900 mb-1">{card.value}</p>
+              <p className="text-[13px] text-gray-400 font-medium mb-3">{card.label}</p>
+              <div className="flex items-center gap-1.5">
+                {card.trend === 'up' && <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />}
+                {card.trend === 'down' && <TrendingDown className="w-3.5 h-3.5 text-red-500" />}
+                {card.trend === 'neutral' && <Minus className="w-3.5 h-3.5 text-blue-500" />}
+                <span className={`text-[12px] font-medium ${card.trend === 'up' ? 'text-emerald-500' : card.trend === 'down' ? 'text-red-500' : 'text-blue-500'}`}>
+                  {card.change}
+                </span>
+              </div>
             </div>
-            <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-md shadow-indigo-200 flex items-center gap-2">
-              Explore
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+          );
+        })}
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-10">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">Recent Plans & Inspiration</h2>
-              <p className="text-slate-500 text-sm mt-0.5">Start a new planning board or continue your drafts</p>
-            </div>
-            <button 
-              onClick={() => navigate('/trips')}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-indigo-100 hover:shadow-xl hover:shadow-indigo-200 transition-all flex items-center gap-2 text-sm"
-            >
-              <Plus className="w-4 h-4" />
-              New Trip
-            </button>
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Trip Category Donut */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-bold text-gray-900 text-[15px]">Budget by Category</h3>
+            <button className="p-1 hover:bg-gray-50 rounded-lg"><MoreVertical className="w-4 h-4 text-gray-400" /></button>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {FEATURED_TRIPS.map((trip) => (
-              <div 
-                key={trip.id}
-                onClick={() => navigate(`/trips`)}
-                className="group cursor-pointer bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-              >
-                <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src={trip.image} 
-                    alt={trip.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 left-4 flex gap-1.5">
-                    {trip.tags.map((tag, i) => (
-                      <span key={i} className="bg-white/95 backdrop-blur-sm text-slate-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-sm uppercase tracking-wider">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-extrabold text-slate-800 text-lg group-hover:text-indigo-600 transition-colors mb-2 line-clamp-1">
-                    {trip.name}
-                  </h3>
-                  <div className="space-y-2 text-sm text-slate-500 mb-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-slate-400" />
-                      <span>{trip.dates}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-slate-400" />
-                      <span>{trip.stops} Stops planned</span>
-                    </div>
-                  </div>
-                  <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Estimated Budget</span>
-                      <span className="font-black text-indigo-600 text-lg">{trip.budget}</span>
-                    </div>
-                    <div className="bg-indigo-50 text-indigo-600 p-2 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                      <ArrowRight className="w-4 h-4" />
-                    </div>
-                  </div>
-                </div>
+          <div className="flex items-center justify-center">
+            <ResponsiveContainer width={200} height={200}>
+              <PieChart>
+                <Pie
+                  data={budgetBreakdown.categories}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={4}
+                  dataKey="value"
+                  strokeWidth={0}
+                >
+                  {budgetBreakdown.categories.map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            {budgetBreakdown.categories.map((cat, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                <span className="text-[12px] text-gray-500">{cat.name}</span>
+                <span className="text-[12px] font-bold text-gray-700 ml-auto">${cat.value}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="space-y-8">
-          <div className="bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-100">
-            <div className="flex items-center justify-between mb-6">
-              <span className="text-indigo-200 text-xs font-extrabold uppercase tracking-wider flex items-center gap-1">
-                <TrendingUp className="w-3.5 h-3.5" />
-                Quick Stats
-              </span>
-            </div>
-            <h3 className="text-xl font-bold mb-1">Planning Dashboard</h3>
-            <p className="text-indigo-100 text-sm mb-6">Manage all travel plans in one dashboard.</p>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-                <span className="text-2xl font-black block">12</span>
-                <span className="text-[11px] text-indigo-200 font-medium">Total Trips</span>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-                <span className="text-2xl font-black block">$8.4K</span>
-                <span className="text-[11px] text-indigo-200 font-medium">Saved Budget</span>
-              </div>
-            </div>
+        {/* Daily Spending Bar Chart */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-bold text-gray-900 text-[15px]">Daily Spending</h3>
+            <button className="p-1 hover:bg-gray-50 rounded-lg"><MoreVertical className="w-4 h-4 text-gray-400" /></button>
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={budgetBreakdown.dailySpending} barSize={20}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+              <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="amount" fill="#F59E0B" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Spending Trend Area Chart */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-bold text-gray-900 text-[15px]">Total Spending</h3>
+            <button className="p-1 hover:bg-gray-50 rounded-lg"><MoreVertical className="w-4 h-4 text-gray-400" /></button>
+          </div>
+          <p className="text-2xl font-extrabold text-gray-900 mb-1">${dashboardStats.totalBudget.toLocaleString()}</p>
+          <p className="text-[12px] text-emerald-500 font-medium mb-4 flex items-center gap-1">
+            <TrendingUp className="w-3 h-3" /> 21% vs last month
+          </p>
+          <ResponsiveContainer width="100%" height={170}>
+            <AreaChart data={budgetBreakdown.monthlyTrend}>
+              <defs>
+                <linearGradient id="spentGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+              <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <Tooltip content={<CustomTooltip />} />
+              <Area type="monotone" dataKey="spent" stroke="#8B5CF6" fill="url(#spentGradient)" strokeWidth={2.5} dot={false} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Tables Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Trips Table */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="font-bold text-gray-900 text-[15px]">Recent Trips</h3>
+            <button onClick={() => navigate('/trips')} className="text-[13px] text-amber-600 font-semibold hover:text-amber-700 flex items-center gap-1">
+              View all <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-50">
+                  <th className="text-left text-[11px] text-gray-400 font-semibold uppercase tracking-wider pb-3 pr-4">S/N</th>
+                  <th className="text-left text-[11px] text-gray-400 font-semibold uppercase tracking-wider pb-3 pr-4">Trip Name</th>
+                  <th className="text-left text-[11px] text-gray-400 font-semibold uppercase tracking-wider pb-3 pr-4">Date</th>
+                  <th className="text-left text-[11px] text-gray-400 font-semibold uppercase tracking-wider pb-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {trips.slice(0, 4).map((trip, i) => (
+                  <tr key={trip.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 cursor-pointer transition-colors" onClick={() => navigate('/trips')}>
+                    <td className="py-3.5 pr-4 text-[13px] text-gray-400 font-medium">{String(i + 1).padStart(2, '0')}</td>
+                    <td className="py-3.5 pr-4 text-[13px] text-gray-800 font-semibold">{trip.name}</td>
+                    <td className="py-3.5 pr-4 text-[13px] text-gray-500">{trip.startDate}</td>
+                    <td className="py-3.5">
+                      <span className={`text-[12px] font-semibold px-3 py-1 rounded-full ${
+                        trip.status === 'upcoming' ? 'bg-amber-50 text-amber-600' :
+                        trip.status === 'completed' ? 'bg-emerald-50 text-emerald-600' :
+                        'bg-blue-50 text-blue-600'
+                      }`}>
+                        {trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Upcoming Activities Table */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="font-bold text-gray-900 text-[15px]">Upcoming Activities</h3>
+            <button onClick={() => navigate('/activities')} className="text-[13px] text-amber-600 font-semibold hover:text-amber-700 flex items-center gap-1">
+              View all <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-50">
+                  <th className="text-left text-[11px] text-gray-400 font-semibold uppercase tracking-wider pb-3 pr-4">S/N</th>
+                  <th className="text-left text-[11px] text-gray-400 font-semibold uppercase tracking-wider pb-3 pr-4">Activity</th>
+                  <th className="text-left text-[11px] text-gray-400 font-semibold uppercase tracking-wider pb-3 pr-4">City</th>
+                  <th className="text-left text-[11px] text-gray-400 font-semibold uppercase tracking-wider pb-3 pr-4">Date</th>
+                  <th className="text-right text-[11px] text-gray-400 font-semibold uppercase tracking-wider pb-3">Cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                {upcomingActivities.map((act, i) => (
+                  <tr key={act.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+                    <td className="py-3.5 pr-4 text-[13px] text-gray-400 font-medium">{String(i + 1).padStart(2, '0')}</td>
+                    <td className="py-3.5 pr-4 text-[13px] text-gray-800 font-semibold">{act.name}</td>
+                    <td className="py-3.5 pr-4 text-[13px] text-gray-500">{act.city}</td>
+                    <td className="py-3.5 pr-4 text-[13px] text-gray-500">{act.date}</td>
+                    <td className="py-3.5 text-right text-[13px] font-bold text-gray-700">${act.cost.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
