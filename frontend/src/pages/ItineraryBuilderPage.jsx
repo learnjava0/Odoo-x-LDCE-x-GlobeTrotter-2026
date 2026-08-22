@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Plus, Calendar, DollarSign, Edit3, Trash2, ArrowRight, Sparkles, MapPin, Hotel, Plane, Compass } from 'lucide-react';
+import { Plus, Calendar, DollarSign, Edit3, Trash2, ArrowRight, Sparkles, MapPin, Hotel, Plane, Compass, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';
-import { trips } from '../data/mockData';
+import { tripService } from '../api/client';
 
 const INITIAL_SECTIONS = [
   {
@@ -36,6 +36,15 @@ export default function ItineraryBuilderPage() {
   const { tripId } = useParams();
   const { isDark } = useTheme();
   const [sections, setSections] = useState(INITIAL_SECTIONS);
+  const [trip, setTrip] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    tripService.get(tripId || 1)
+      .then(setTrip)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [tripId]);
 
   const addSection = () => {
     const nextNum = sections.length + 1;
@@ -63,7 +72,7 @@ export default function ItineraryBuilderPage() {
             <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-2.5 rounded-2xl text-white shadow-lg shadow-amber-500/20">
               <Sparkles className="w-6 h-6" />
             </div>
-            Build Itinerary Screen
+            {loading ? <Loader2 className="w-6 h-6 animate-spin text-amber-500" /> : `Build: ${trip?.name || 'Itinerary'}`}
           </h1>
           <p className={`text-sm mt-1.5 ml-14 ${isDark ? 'text-slate-400' : 'text-gray-400'}`}>
             Organize your trip into structured sections for travel, hotels, and activities

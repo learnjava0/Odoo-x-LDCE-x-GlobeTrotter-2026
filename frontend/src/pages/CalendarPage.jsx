@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from "react";
+
 import { Search, ChevronLeft, ChevronRight, CalendarDays, Plus, Clock, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';
-import { upcomingActivities as mockActivities } from '../data/mockData';
 
+const mockActivities = [
+  { id: 1, name: "Eiffel Tower Visit", city: "Paris", date: "Jul 16, 2026", cost: 26.00, category: "sightseeing" },
+  { id: 2, name: "Louvre Museum", city: "Paris", date: "Jul 17, 2026", cost: 17.00, category: "sightseeing" },
+  { id: 3, name: "Seine River Cruise", city: "Paris", date: "Jul 18, 2026", cost: 15.00, category: "adventure" },
+];
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 

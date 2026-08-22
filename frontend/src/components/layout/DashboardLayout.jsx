@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from "react";
+
 import Sidebar from './Sidebar.jsx';
 import Navbar from './Navbar.jsx';
 import { useTheme } from '../../context/ThemeContext.jsx';

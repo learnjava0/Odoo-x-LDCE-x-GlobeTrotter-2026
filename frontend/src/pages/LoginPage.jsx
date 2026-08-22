@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Compass, User, Lock, ArrowRight, Eye, EyeOff, Camera } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -10,6 +10,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
@@ -20,8 +22,20 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await login(username, password);
-    navigate('/');
+    setError('');
+    setLoading(true);
+    try {
+      await login(username, password);
+      navigate('/');
+    } catch (err) {
+      const msg =
+        err?.response?.data?.non_field_errors?.[0] ||
+        err?.response?.data?.detail ||
+        'Invalid email or password. Please try again.';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -85,6 +99,12 @@ export default function LoginPage() {
             <h2 className="text-2xl font-black text-gray-900 tracking-tight">Welcome back</h2>
           </div>
 
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold px-4 py-3 rounded-xl">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="username" className="block text-[11px] font-extrabold text-gray-400 uppercase tracking-wider mb-1.5">
@@ -132,9 +152,10 @@ export default function LoginPage() {
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-xs cursor-pointer"
+                disabled={loading}
+                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-xs cursor-pointer disabled:opacity-60"
               >
-                Log in
+                {loading ? 'Logging in...' : 'Log in'}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

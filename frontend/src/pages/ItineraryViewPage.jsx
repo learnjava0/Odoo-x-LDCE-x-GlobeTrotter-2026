@@ -1,33 +1,37 @@
-import React, { useState } from 'react';
-import { Search, ArrowDown, MapPin, Calendar, Clock } from 'lucide-react';
+import { useState, useEffect, Fragment } from 'react';
+import { useParams } from 'react-router-dom';
+import { Search, ArrowDown, MapPin, Calendar, Clock, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';
-import { trips } from '../data/mockData';
+import { tripService } from '../api/client';
 
 export default function ItineraryViewPage() {
   const { isDark } = useTheme();
-  const trip = trips[0];
+  const { tripId } = useParams();
+  const [trip, setTrip] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const daysData = [
-    {
-      dayLabel: 'Day 1',
-      date: 'Jul 15, 2026',
-      activities: [
-        { id: 1, name: 'Arrival at Paris CDG Airport & Hotel Check-in', time: '09:00 AM', expense: 120 },
-        { id: 2, name: 'Eiffel Tower Guided Tour & Observation Deck', time: '02:00 PM', expense: 26 },
-        { id: 3, name: 'Le Marais Dinner & Evening Walking Tour', time: '07:30 PM', expense: 45 },
-      ]
-    },
-    {
-      dayLabel: 'Day 2',
-      date: 'Jul 16, 2026',
-      activities: [
-        { id: 4, name: 'Louvre Museum Skip-the-Line Entry', time: '10:00 AM', expense: 17 },
-        { id: 5, name: 'Tuileries Garden Lunch & Relaxing Stroll', time: '01:30 PM', expense: 22 },
-        { id: 6, name: 'Sunset Seine River Boat Cruise with Live Music', time: '06:00 PM', expense: 15 },
-      ]
-    }
-  ];
+  useEffect(() => {
+    tripService.get(tripId || 1)
+      .then(setTrip)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [tripId]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-10 h-10 animate-spin text-amber-500" />
+      </div>
+    );
+  }
+
+  if (!trip) {
+    return <div className="p-8 text-center text-red-500">Trip not found</div>;
+  }
+
+  const daysData = []; // Replace with actual itinerary transformation once we build Itinerary Stop endpoint mapping
+
 
   return (
     <div className="animate-fade-in space-y-8 max-w-5xl mx-auto pb-16">
@@ -99,7 +103,7 @@ export default function ItineraryViewPage() {
 
               <div className="space-y-4 pt-2">
                 {dayGroup.activities.map((act, idx) => (
-                  <React.Fragment key={act.id}>
+                  <Fragment key={act.id}>
                     <div className={`rounded-2xl p-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${
                       isDark ? 'bg-slate-800/60 border-slate-700 hover:bg-slate-800' : 'bg-gray-50 border-gray-100 hover:bg-white hover:shadow-md'
                     }`}>
@@ -129,7 +133,7 @@ export default function ItineraryViewPage() {
                         </div>
                       </div>
                     )}
-                  </React.Fragment>
+                  </Fragment>
                 ))}
               </div>
 

@@ -1,27 +1,38 @@
-import React from 'react';
+
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import {
   LayoutDashboard, Briefcase, PlusCircle, Search, MapPin,
-  DollarSign, CalendarDays, User, ChevronDown, Compass, X, ShieldCheck, Users, Sun, Moon
+  DollarSign, CalendarDays, User, ChevronDown, Compass, X, ShieldCheck, Users, Sun, Moon, LogOut
 } from 'lucide-react';
-
-const navItems = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/trips', label: 'My Trips', icon: Briefcase },
-  { to: '/create-trip', label: 'Create Trip', icon: PlusCircle },
-  { to: '/cities', label: 'City Search', icon: MapPin },
-  { to: '/activities', label: 'Activity Search', icon: Search },
-  { to: '/budget', label: 'Budget', icon: DollarSign },
-  { to: '/calendar', label: 'Calendar', icon: CalendarDays },
-  { to: '/community', label: 'Community', icon: Users },
-  { to: '/admin', label: 'Admin Dashboard', icon: ShieldCheck },
-  { to: '/profile', label: 'Profile', icon: User },
-];
 
 export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (err) {
+      console.error('Logout failed:', err);
+    }
+  };
+
+  const navItems = [
+    { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/trips', label: 'My Trips', icon: Briefcase },
+    { to: '/create-trip', label: 'Create Trip', icon: PlusCircle },
+    { to: '/cities', label: 'City Search', icon: MapPin },
+    { to: '/activities', label: 'Activity Search', icon: Search },
+    { to: '/budget', label: 'Budget', icon: DollarSign },
+    { to: '/calendar', label: 'Calendar', icon: CalendarDays },
+    { to: '/community', label: 'Community', icon: Users },
+    ...(user?.is_admin ? [{ to: '/admin', label: 'Admin Dashboard', icon: ShieldCheck }] : []),
+    { to: '/profile', label: 'Profile', icon: User },
+  ];
 
   return (
     <>
@@ -114,6 +125,20 @@ export default function Sidebar({ isOpen, onClose }) {
           </button>
         </div>
 
+        {/* Logout Toggle */}
+        <div className="px-4 py-1">
+          <button
+            onClick={handleLogout}
+            className={`w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              isDark
+                ? 'text-red-400 hover:bg-red-500/10'
+                : 'text-red-600 hover:bg-red-50'
+            }`}
+          >
+            <LogOut className="w-4 h-4" /> Logout
+          </button>
+        </div>
+
         {/* Bottom user card */}
         <div className={`p-4 border-t ${isDark ? 'border-slate-800' : 'border-gray-50'}`}>
           <button
@@ -122,12 +147,16 @@ export default function Sidebar({ isOpen, onClose }) {
               isDark ? 'bg-slate-800 hover:bg-slate-750' : 'bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100'
             }`}
           >
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-amber-500/20">
-              A
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-amber-500/20 uppercase">
+              {user?.name?.charAt(0) || 'U'}
             </div>
-            <div className="flex-1 text-left">
-              <p className={`text-[13px] font-semibold leading-tight ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>Ajay Panchal</p>
-              <p className="text-[11px] text-amber-500 font-bold">Traveler</p>
+            <div className="flex-1 text-left line-clamp-1">
+              <p className={`text-[13px] font-semibold leading-tight ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>
+                {user?.name || 'User'}
+              </p>
+              <p className="text-[11px] text-amber-500 font-bold">
+                {user?.is_admin ? 'Admin' : 'Traveler'}
+              </p>
             </div>
             <ChevronDown className="w-4 h-4 text-gray-400" />
           </button>

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Compass, Mail, ArrowRight, ArrowLeft, CheckCircle2 } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
-  const navigate = useNavigate();
+  
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 

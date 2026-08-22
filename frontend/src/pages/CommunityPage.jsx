@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Search, Users, Heart, MessageCircle, Share2, MapPin, Calendar, Info, Sparkles, Send, Plus, Image as ImageIcon, X } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Users, Heart, MessageCircle, Share2, MapPin, Info, Sparkles, Send, Plus, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const INITIAL_COMMUNITY_POSTS = [
   {
@@ -43,6 +44,7 @@ const INITIAL_COMMUNITY_POSTS = [
 
 export default function CommunityPage() {
   const { isDark } = useTheme();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [posts, setPosts] = useState(INITIAL_COMMUNITY_POSTS);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -62,7 +64,7 @@ export default function CommunityPage() {
 
     const newPost = {
       id: Date.now(),
-      author: 'Ajay Panchal',
+      author: user?.name || 'Traveler',
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
       title: postTitle,
       location: postLocation || 'GlobeTrotter Community',

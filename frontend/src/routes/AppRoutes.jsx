@@ -1,5 +1,7 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Navigate, Routes, Route } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
+import DashboardLayout from '../components/layout/DashboardLayout.jsx';
+import { Loader2 } from 'lucide-react';
 
 import DashboardPage from '../pages/DashboardPage';
 import LoginPage from '../pages/LoginPage';
@@ -18,43 +20,76 @@ import PublicTripPage from '../pages/PublicTripPage';
 import ProfilePage from '../pages/ProfilePage';
 import AdminDashboardPage from '../pages/AdminDashboardPage';
 
+// ─── Guard: must be logged in ──────────────────────────────────────────────────
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F7F3]">
+        <Loader2 className="w-10 h-10 animate-spin text-amber-500" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return <DashboardLayout>{children}</DashboardLayout>;
+}
+
+// ─── Guard: must be admin ──────────────────────────────────────────────────────
+function AdminRoute({ children }) {
+  const { isAuthenticated, user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F7F3]">
+        <Loader2 className="w-10 h-10 animate-spin text-amber-500" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!user?.is_admin) return <Navigate to="/" replace />;
+  return <DashboardLayout>{children}</DashboardLayout>;
+}
+
+// ─── Guard: already logged in → redirect away from auth pages ─────────────────
+function PublicOnlyRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return null;
+  if (isAuthenticated) return <Navigate to="/" replace />;
+  return children;
+}
+
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Dashboard */}
-      <Route path="/" element={<DashboardPage />} />
+      {/* ── Public auth pages ────────────────────────────────── */}
+      <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
+      <Route path="/signup" element={<PublicOnlyRoute><SignupPage /></PublicOnlyRoute>} />
+      <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPasswordPage /></PublicOnlyRoute>} />
 
-      {/* Auth (no sidebar) */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-
-      {/* Trips */}
-      <Route path="/trips" element={<MyTripsPage />} />
-      <Route path="/create-trip" element={<CreateTripPage />} />
-      <Route path="/builder/:tripId" element={<ItineraryBuilderPage />} />
-      <Route path="/itinerary/:tripId" element={<ItineraryViewPage />} />
-
-      {/* Search */}
-      <Route path="/cities" element={<CitySearchPage />} />
-      <Route path="/activities" element={<ActivitySearchPage />} />
-
-      {/* Budget, Calendar, Community */}
-      <Route path="/budget" element={<BudgetPage />} />
-      <Route path="/calendar" element={<CalendarPage />} />
-      <Route path="/community" element={<CommunityPage />} />
-
-      {/* Public (no sidebar) */}
+      {/* ── Fully public (no sidebar) ─────────────────────────── */}
       <Route path="/public/:slug" element={<PublicTripPage />} />
 
-      {/* Profile */}
-      <Route path="/profile" element={<ProfilePage />} />
+      {/* ── Protected pages (require login) ──────────────────── */}
+      <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+      <Route path="/trips" element={<ProtectedRoute><MyTripsPage /></ProtectedRoute>} />
+      <Route path="/create-trip" element={<ProtectedRoute><CreateTripPage /></ProtectedRoute>} />
+      <Route path="/builder/:tripId" element={<ProtectedRoute><ItineraryBuilderPage /></ProtectedRoute>} />
+      <Route path="/itinerary/:tripId" element={<ProtectedRoute><ItineraryViewPage /></ProtectedRoute>} />
+      <Route path="/cities" element={<ProtectedRoute><CitySearchPage /></ProtectedRoute>} />
+      <Route path="/activities" element={<ProtectedRoute><ActivitySearchPage /></ProtectedRoute>} />
+      <Route path="/budget" element={<ProtectedRoute><BudgetPage /></ProtectedRoute>} />
+      <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
+      <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
-      {/* Admin */}
-      <Route path="/admin" element={<AdminDashboardPage />} />
+      {/* ── Admin-only pages ──────────────────────────────────── */}
+      <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
 
-      {/* Fallback */}
-      <Route path="*" element={<DashboardPage />} />
+      {/* ── Fallback ─────────────────────────────────────────── */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

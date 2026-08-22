@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
-import { Search, ShieldCheck, Users, MapPin, Activity, TrendingUp, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Search, ShieldCheck, Users, MapPin, Activity, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { PieChart, Pie, Cell, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../context/ThemeContext.jsx';
-import { cities, activities } from '../data/mockData';
 
+const cities = [
+  { id: 1, name: "Paris", country: "France", costIndex: 145.00, popularity: 98, imageUrl: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80" },
+  { id: 2, name: "Rome", country: "Italy", costIndex: 120.00, popularity: 95, imageUrl: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80" },
+  { id: 3, name: "Tokyo", country: "Japan", costIndex: 130.00, popularity: 92, imageUrl: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80" },
+];
+
+const activities = [
+  { id: 1, name: "Eiffel Tower Visit", cost: 26.00, imageUrl: "https://images.unsplash.com/photo-1543349689-9a4d426bee8e?auto=format&fit=crop&w=600&q=80" },
+  { id: 2, name: "Louvre Museum", cost: 17.00, imageUrl: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=600&q=80" },
+  { id: 3, name: "Seine River Cruise", cost: 15.00, imageUrl: "https://images.unsplash.com/photo-1478391679764-b2d8b3cd1e94?auto=format&fit=crop&w=600&q=80" },
+];
 const INITIAL_USERS = [
   { id: 1, name: 'Ajay Panchal', email: 'ajaypanchal@gmail.com', role: 'Admin', tripsCount: 12, status: 'Active', joined: 'Jan 15, 2026' },
   { id: 2, name: 'Sarah Jenkins', email: 'sarah.j@example.com', role: 'User', tripsCount: 5, status: 'Active', joined: 'Feb 02, 2026' },

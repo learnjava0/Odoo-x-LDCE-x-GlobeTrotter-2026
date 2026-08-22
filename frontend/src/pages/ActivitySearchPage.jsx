@@ -1,14 +1,22 @@
-import React, { useState } from 'react';
-import { Search, MapPin, Clock, DollarSign, Tag, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, MapPin, Clock, DollarSign, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';
-import { activities, cities } from '../data/mockData';
-
-const categories = ['All', 'sightseeing', 'culture', 'food', 'hiking'];
+import { activityService } from '../api/client';
 
 export default function ActivitySearchPage() {
   const { isDark } = useTheme();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    activityService.list().then(data => {
+      setActivities(Array.isArray(data) ? data : (data.results ?? []));
+    }).catch(console.error).finally(() => setLoading(false));
+  }, []);
+
+  const categories = ['All', ...new Set(activities.map(a => a.category))];
 
   const filtered = activities.filter(act => {
     const matchSearch = act.name.toLowerCase().includes(search.toLowerCase()) || act.description.toLowerCase().includes(search.toLowerCase());
@@ -37,7 +45,7 @@ export default function ActivitySearchPage() {
         <div className="flex gap-1 overflow-x-auto w-full sm:w-auto">
           {categories.map(cat => (
             <button key={cat} onClick={() => setCategory(cat)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize cursor-pointer transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs font-semibold capitalize cursor-pointer transition-all shrink-0 ${
                 category === cat
                   ? 'bg-amber-500 text-white shadow-sm'
                   : isDark ? 'text-slate-400 hover:bg-slate-800' : 'text-gray-500 hover:bg-gray-50'
@@ -49,23 +57,26 @@ export default function ActivitySearchPage() {
       </div>
 
       {/* Activity Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map(act => {
-          const city = cities.find(c => c.id === act.cityId);
-          return (
+      {loading ? (
+        <div className="flex justify-center p-10">
+          <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filtered.map(act => (
             <div key={act.id} className={`rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border group flex flex-col justify-between ${
               isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'
             }`}>
               <div>
                 <div className="relative h-44 overflow-hidden">
-                  <img src={act.imageUrl} alt={act.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={act.image_url || 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=80'} alt={act.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
                     {act.category}
                   </span>
                 </div>
                 <div className="p-6 space-y-3">
                   <span className="text-[11px] font-bold text-amber-500 flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5" /> {city?.name}, {city?.country}
+                    <MapPin className="w-3.5 h-3.5" /> Destination ID: {act.destination}
                   </span>
                   <h3 className={`font-extrabold text-base group-hover:text-amber-500 transition-colors line-clamp-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>{act.name}</h3>
                   <p className={`text-xs leading-relaxed line-clamp-2 ${isDark ? 'text-slate-400' : 'text-gray-400'}`}>{act.description}</p>
@@ -73,13 +84,18 @@ export default function ActivitySearchPage() {
               </div>
 
               <div className={`p-6 pt-3 border-t flex items-center justify-between text-xs ${isDark ? 'border-slate-800' : 'border-gray-50'}`}>
-                <span className="flex items-center gap-1 text-gray-400 font-semibold"><Clock className="w-3.5 h-3.5" /> {act.durationMins} mins</span>
-                <span className="font-black text-amber-500 text-sm flex items-center"><DollarSign className="w-3.5 h-3.5" />{act.cost === 0 ? 'Free' : `$${act.cost}`}</span>
+                <span className="flex items-center gap-1 text-gray-400 font-semibold"><Clock className="w-3.5 h-3.5" /> {act.duration_mins} mins</span>
+                <span className="font-black text-amber-500 text-sm flex items-center"><DollarSign className="w-3.5 h-3.5" />{Number(act.estimated_cost) === 0 ? 'Free' : `$${act.estimated_cost}`}</span>
               </div>
             </div>
-          );
-        })}
-      </div>
+          ))}
+          {filtered.length === 0 && (
+            <div className={`col-span-full p-8 text-center rounded-2xl border ${isDark ? 'bg-slate-900 border-slate-800 text-gray-400' : 'bg-white border-gray-100 text-gray-500'}`}>
+              No activities found.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

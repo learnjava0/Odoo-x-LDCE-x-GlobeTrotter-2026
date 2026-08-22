@@ -1,8 +1,28 @@
-import React from 'react';
-import { DollarSign, TrendingUp, CreditCard, ShoppingBag, PieChart as PieIcon } from 'lucide-react';
-import { PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../context/ThemeContext.jsx';
-import { budgetBreakdown, dashboardStats } from '../data/mockData';
+
+const budgetBreakdown = {
+  categories: [
+    { name: "Activities", value: 1240, color: "#F59E0B" },
+    { name: "Stay", value: 2100, color: "#8B5CF6" },
+    { name: "Transport", value: 850, color: "#3B82F6" },
+    { name: "Meals", value: 960, color: "#10B981" },
+  ],
+  dailySpending: [
+    { day: "Jul 15", amount: 180 }, { day: "Jul 16", amount: 120 }, { day: "Jul 17", amount: 240 },
+    { day: "Jul 18", amount: 95 }, { day: "Jul 19", amount: 310 }, { day: "Jul 20", amount: 175 },
+    { day: "Jul 21", amount: 200 }, { day: "Jul 22", amount: 280 }
+  ]
+};
+
+const dashboardStats = {
+  totalTrips: 4,
+  citiesVisited: 8,
+  activitiesPlanned: 24,
+  totalBudget: 8150,
+};
 
 export default function BudgetPage() {
   const { isDark } = useTheme();

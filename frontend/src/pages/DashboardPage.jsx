@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, MapPin, Calendar, ArrowRight, Sparkles, Compass } from 'lucide-react';
+import { Search, Plus, MapPin, Calendar, ArrowRight, Sparkles, Compass, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';
-import { trips } from '../data/mockData';
+import { tripService} from '../api/client';
 
 const REGIONAL_SELECTIONS = [
   { id: 1, name: 'Europe', citiesCount: 42, image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80', tag: 'Popular' },
@@ -20,10 +20,39 @@ export default function DashboardPage() {
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [selectedSort, setSelectedSort] = useState('Date');
 
+  const [trips, setTrips] = useState([]);
+  const [loadingTrips, setLoadingTrips] = useState(true);
+
+  useEffect(() => {
+    tripService.list()
+      .then((data) => {
+        // DRF may return paginated or raw array
+        const results = Array.isArray(data) ? data : (data.results ?? []);
+        setTrips(results);
+      })
+      .catch(console.error)
+      .finally(() => setLoadingTrips(false));
+  }, []);
+
   const filteredTrips = trips.filter(trip => {
-    const matchesSearch = trip.name.toLowerCase().includes(searchQuery.toLowerCase()) || trip.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
+    const matchesSearch =
+      trip.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (trip.description || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter =
+      selectedFilter === 'All' ||
+      (trip.status || '').toLowerCase() === selectedFilter.toLowerCase();
+    return matchesSearch && matchesFilter;
   });
+
+  const sortedTrips = [...filteredTrips].sort((a, b) => {
+    if (selectedSort === 'Date') return new Date(b.start_date) - new Date(a.start_date);
+    if (selectedSort === 'Name') return a.name.localeCompare(b.name);
+    if (selectedSort === 'Budget') return (b.estimated_budget || 0) - (a.estimated_budget || 0);
+    return 0;
+  });
+
+  // Map backend field names to display-friendly names
+  const getCoverImage = (trip) => trip.cover_image || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80';
 
   return (
     <div className="animate-fade-in space-y-10 relative pb-20">
@@ -59,7 +88,7 @@ export default function DashboardPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search bar ......"
+            placeholder="Search trips..."
             className={`w-full pl-11 pr-4 py-3 border rounded-xl text-[13px] transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 ${
               isDark ? 'bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500' : 'bg-gray-50 border-gray-100 text-gray-800 placeholder-gray-400'
             }`}
@@ -67,37 +96,21 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0">
-          <select
-            value={selectedGroupBy}
-            onChange={(e) => setSelectedGroupBy(e.target.value)}
-            className={`px-4 py-3 border rounded-xl text-[13px] font-semibold cursor-pointer ${
-              isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-gray-50 border-gray-100 text-gray-700'
-            }`}
-          >
+          <select value={selectedGroupBy} onChange={(e) => setSelectedGroupBy(e.target.value)}
+            className={`px-4 py-3 border rounded-xl text-[13px] font-semibold cursor-pointer ${isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-gray-50 border-gray-100 text-gray-700'}`}>
             <option value="All">Group by: All</option>
             <option value="Region">Group by: Region</option>
             <option value="Status">Group by: Status</option>
           </select>
-
-          <select
-            value={selectedFilter}
-            onChange={(e) => setSelectedFilter(e.target.value)}
-            className={`px-4 py-3 border rounded-xl text-[13px] font-semibold cursor-pointer ${
-              isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-gray-50 border-gray-100 text-gray-700'
-            }`}
-          >
+          <select value={selectedFilter} onChange={(e) => setSelectedFilter(e.target.value)}
+            className={`px-4 py-3 border rounded-xl text-[13px] font-semibold cursor-pointer ${isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-gray-50 border-gray-100 text-gray-700'}`}>
             <option value="All">Filter: All</option>
             <option value="Upcoming">Filter: Upcoming</option>
+            <option value="Planning">Filter: Planning</option>
             <option value="Completed">Filter: Completed</option>
           </select>
-
-          <select
-            value={selectedSort}
-            onChange={(e) => setSelectedSort(e.target.value)}
-            className={`px-4 py-3 border rounded-xl text-[13px] font-semibold cursor-pointer ${
-              isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-gray-50 border-gray-100 text-gray-700'
-            }`}
-          >
+          <select value={selectedSort} onChange={(e) => setSelectedSort(e.target.value)}
+            className={`px-4 py-3 border rounded-xl text-[13px] font-semibold cursor-pointer ${isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-gray-50 border-gray-100 text-gray-700'}`}>
             <option value="Date">Sort by: Date</option>
             <option value="Budget">Sort by: Budget</option>
             <option value="Name">Sort by: Name</option>
@@ -124,11 +137,7 @@ export default function DashboardPage() {
               }`}
             >
               <div className="relative h-32 overflow-hidden">
-                <img
-                  src={region.image}
-                  alt={region.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
+                <img src={region.image} alt={region.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                 <span className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-sm text-slate-800 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                   {region.tag}
@@ -143,70 +152,76 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 4. Previous Trips */}
+      {/* 4. My Trips */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className={`text-xl font-extrabold tracking-tight flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            <MapPin className="w-5 h-5 text-amber-500" /> Previous Trips
+            <MapPin className="w-5 h-5 text-amber-500" /> My Trips
           </h2>
           <button onClick={() => navigate('/trips')} className="text-xs font-bold text-amber-500 hover:text-amber-400 flex items-center gap-1">
             View All <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {filteredTrips.map((trip) => (
-            <div
-              key={trip.id}
-              onClick={() => navigate(`/builder/${trip.id}`)}
-              className={`group cursor-pointer rounded-3xl overflow-hidden border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between ${
-                isDark ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-gray-100 text-gray-900'
-              }`}
-            >
-              <div>
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={trip.coverPhoto}
-                    alt={trip.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-amber-600 text-[11px] font-bold px-3 py-1 rounded-full shadow-sm capitalize">
-                    {trip.status}
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className={`font-extrabold text-base group-hover:text-amber-500 transition-colors mb-2 line-clamp-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    {trip.name}
-                  </h3>
-                  <p className={`text-xs line-clamp-2 mb-4 leading-relaxed ${isDark ? 'text-slate-400' : 'text-gray-400'}`}>{trip.description}</p>
-                  
-                  <div className="space-y-2 text-[12px]">
-                    <div className={`flex items-center gap-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                      <Calendar className="w-3.5 h-3.5 text-amber-500" />
-                      <span>{trip.startDate} → {trip.endDate}</span>
-                    </div>
-                    <div className={`flex items-center gap-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                      <MapPin className="w-3.5 h-3.5 text-amber-500" />
-                      <span>{trip.stops.length} Stops Planned</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className={`px-6 pb-6 pt-4 border-t flex items-center justify-between ${isDark ? 'border-slate-800' : 'border-gray-50'}`}>
+        {loadingTrips ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+          </div>
+        ) : sortedTrips.length === 0 ? (
+          <div className={`rounded-3xl border p-12 text-center ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
+            <Compass className="w-12 h-12 text-amber-500/40 mx-auto mb-3" />
+            <p className={`font-semibold text-sm ${isDark ? 'text-slate-400' : 'text-gray-400'}`}>No trips yet — plan your first adventure!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {sortedTrips.slice(0, 6).map((trip) => (
+              <div
+                key={trip.id}
+                onClick={() => navigate(`/builder/${trip.id}`)}
+                className={`group cursor-pointer rounded-3xl overflow-hidden border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between ${
+                  isDark ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-gray-100 text-gray-900'
+                }`}
+              >
                 <div>
-                  <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider block">Estimated Budget</span>
-                  <span className="font-black text-amber-500 text-lg">${trip.totalBudget.toLocaleString()}</span>
+                  <div className="relative h-48 overflow-hidden">
+                    <img src={getCoverImage(trip)} alt={trip.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-amber-600 text-[11px] font-bold px-3 py-1 rounded-full shadow-sm capitalize">
+                      {trip.status}
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className={`font-extrabold text-base group-hover:text-amber-500 transition-colors mb-2 line-clamp-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      {trip.name}
+                    </h3>
+                    <p className={`text-xs line-clamp-2 mb-4 leading-relaxed ${isDark ? 'text-slate-400' : 'text-gray-400'}`}>{trip.description}</p>
+                    <div className="space-y-2 text-[12px]">
+                      <div className={`flex items-center gap-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                        <Calendar className="w-3.5 h-3.5 text-amber-500" />
+                        <span>{trip.start_date} → {trip.end_date}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                        <MapPin className="w-3.5 h-3.5 text-amber-500" />
+                        <span>{trip.cities_count ?? (trip.stops?.length ?? 0)} Cities</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className={`p-2 rounded-xl group-hover:bg-amber-500 group-hover:text-white transition-colors ${
-                  isDark ? 'bg-slate-800 text-amber-400' : 'bg-amber-50 text-amber-600'
-                }`}>
-                  <ArrowRight className="w-4 h-4" />
+
+                <div className={`px-6 pb-6 pt-4 border-t flex items-center justify-between ${isDark ? 'border-slate-800' : 'border-gray-50'}`}>
+                  <div>
+                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider block">Est. Budget</span>
+                    <span className="font-black text-amber-500 text-lg">
+                      ${Number(trip.estimated_budget || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className={`p-2 rounded-xl group-hover:bg-amber-500 group-hover:text-white transition-colors ${isDark ? 'bg-slate-800 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 5. Fixed Floating Action Button */}
@@ -217,7 +232,6 @@ export default function DashboardPage() {
         <Plus className="w-5 h-5 stroke-[3]" />
         Plan a trip
       </button>
-
     </div>
   );
 }
