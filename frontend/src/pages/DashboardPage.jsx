@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, MapPin, Calendar, ArrowRight, Sparkles, Compass, Loader2 } from 'lucide-react';
+import { Search, Plus, MapPin, Calendar, ArrowRight, Sparkles, Compass, Loader2, Trash2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { tripService} from '../api/client';
 
@@ -33,6 +33,17 @@ export default function DashboardPage() {
       .catch(console.error)
       .finally(() => setLoadingTrips(false));
   }, []);
+
+  const handleDeleteTrip = async (id) => {
+    if (!window.confirm('Are you sure you want to permanently delete this trip?')) return;
+    try {
+      await tripService.delete(id);
+      setTrips(prev => prev.filter(t => t.id !== id));
+    } catch (e) {
+      console.error(e);
+      alert('Failed to delete trip.');
+    }
+  };
 
   const filteredTrips = trips.filter(trip => {
     const matchesSearch =
@@ -177,7 +188,7 @@ export default function DashboardPage() {
             {sortedTrips.slice(0, 6).map((trip) => (
               <div
                 key={trip.id}
-                onClick={() => navigate(`/builder/${trip.id}`)}
+                onClick={() => navigate((trip.status || '').toUpperCase() === 'PLANNING' ? `/builder/${trip.id}` : `/itinerary/${trip.id}`)}
                 className={`group cursor-pointer rounded-3xl overflow-hidden border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between ${
                   isDark ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-gray-100 text-gray-900'
                 }`}
@@ -187,6 +198,15 @@ export default function DashboardPage() {
                     <img src={getCoverImage(trip)} alt={trip.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-amber-600 text-[11px] font-bold px-3 py-1 rounded-full shadow-sm capitalize">
                       {trip.status}
+                    </div>
+                    <div className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleDeleteTrip(trip.id); }}
+                        className="p-2 bg-red-500/90 text-white rounded-full shadow-lg hover:bg-red-600 hover:scale-110 transition-all"
+                        title="Delete Trip"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                   <div className="p-6">
@@ -210,8 +230,7 @@ export default function DashboardPage() {
                 <div className={`px-6 pb-6 pt-4 border-t flex items-center justify-between ${isDark ? 'border-slate-800' : 'border-gray-50'}`}>
                   <div>
                     <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider block">Est. Budget</span>
-                    <span className="font-black text-amber-500 text-lg">
-                      ${Number(trip.estimated_budget || 0).toLocaleString()}
+                    <span className="font-black text-amber-500 text-lg"> ₹{Number(trip.estimated_budget || 0).toLocaleString()}
                     </span>
                   </div>
                   <div className={`p-2 rounded-xl group-hover:bg-amber-500 group-hover:text-white transition-colors ${isDark ? 'bg-slate-800 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>

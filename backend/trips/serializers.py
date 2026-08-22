@@ -45,6 +45,8 @@ class TripSerializer(serializers.ModelSerializer):
     activities_count = serializers.SerializerMethodField()
     estimated_budget = serializers.SerializerMethodField()
     days_count = serializers.IntegerField(read_only=True)
+    # Always compute status from dates so existing trips show the right badge on read
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
@@ -58,6 +60,10 @@ class TripSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("End date cannot be before start date.")
         return attrs
 
+    def get_status(self, obj):
+        """Derive status dynamically from dates so all existing trips are correct."""
+        return obj.compute_status()
+
     def get_cities_count(self, obj):
         return getattr(obj, "cities_count", None) or obj.stops.count()
 
@@ -65,4 +71,4 @@ class TripSerializer(serializers.ModelSerializer):
         return getattr(obj, "activities_count", None) or ItineraryActivity.objects.filter(trip_stop__trip=obj).count()
 
     def get_estimated_budget(self, obj):
-        return getattr(obj, "estimated_budget", None) or sum(item.estimated_cost or 0 for stop in obj.stops.all() for item in stop.itinerary_activities.all())
+        return getattr(obj, "estimated_budget", None) or sum(item.estimated_cost or 0 for stop in obj.stops.all() for item in stop.itinerary_activities.all()) + sum(exp.amount or 0 for exp in obj.expenses.all())

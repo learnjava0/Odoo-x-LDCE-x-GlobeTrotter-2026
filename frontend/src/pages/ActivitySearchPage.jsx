@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, MapPin, Clock, DollarSign, Loader2 } from 'lucide-react';
+import { Search, MapPin, Clock, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { activityService } from '../api/client';
 
@@ -87,7 +87,7 @@ export default function ActivitySearchPage() {
 
               <div className={`p-6 pt-3 border-t flex items-center justify-between text-xs ${isDark ? 'border-slate-800' : 'border-gray-50'}`}>
                 <span className="flex items-center gap-1 text-gray-400 font-semibold"><Clock className="w-3.5 h-3.5" /> {act.duration_mins} mins</span>
-                <span className="font-black text-amber-500 text-sm flex items-center"><DollarSign className="w-3.5 h-3.5" />{Number(act.estimated_cost) === 0 ? 'Free' : `$${act.estimated_cost}`}</span>
+                <span className="font-black text-amber-500 text-sm flex items-center">{Number(act.estimated_cost) === 0 ? 'Free' : `₹${Number(act.estimated_cost).toLocaleString()}`}</span>
               </div>
             </div>
           ))}

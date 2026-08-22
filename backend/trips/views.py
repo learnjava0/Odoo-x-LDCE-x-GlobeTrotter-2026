@@ -15,16 +15,18 @@ class TripViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsTripOwner]
 
     def get_queryset(self):
-        return (
-            Trip.objects.filter(user=self.request.user)
-            .prefetch_related("stops__city", "stops__itinerary_activities__activity")
-            .annotate(
-                cities_count=Count("stops", distinct=True),
-                activities_count=Count("stops__itinerary_activities", distinct=True),
-                estimated_budget=Sum("stops__itinerary_activities__estimated_cost"),
-            )
-            .order_by("-start_date", "-id")
-        )
+        qs = Trip.objects.prefetch_related(
+            "stops__city", "stops__itinerary_activities__activity"
+        ).annotate(
+            cities_count=Count("stops", distinct=True),
+            activities_count=Count("stops__itinerary_activities", distinct=True),
+            estimated_budget=Sum("stops__itinerary_activities__estimated_cost"),
+        ).order_by("-start_date", "-id")
+
+        # Admins can see all trips; regular users only see their own
+        if self.request.user.is_staff or getattr(self.request.user, "is_admin", False):
+            return qs
+        return qs.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

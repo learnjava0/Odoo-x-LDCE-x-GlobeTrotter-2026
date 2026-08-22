@@ -1,27 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-import { Search, ChevronLeft, ChevronRight, CalendarDays, Plus, Clock, X } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, CalendarDays, Plus, Clock, X, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';
+import { tripService } from '../api/client';
 
-const mockActivities = [
-  { id: 1, name: "Eiffel Tower Visit", city: "Paris", date: "Jul 16, 2026", cost: 26.00, category: "sightseeing" },
-  { id: 2, name: "Louvre Museum", city: "Paris", date: "Jul 17, 2026", cost: 17.00, category: "sightseeing" },
-  { id: 3, name: "Seine River Cruise", city: "Paris", date: "Jul 18, 2026", cost: 15.00, category: "adventure" },
-];
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function CalendarPage() {
   const { isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 6, 1));
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(16);
-  const [eventsList, setEventsList] = useState([
-    { id: 1, title: 'Summer in Paris', startDate: '2026-07-15', endDate: '2026-07-21', color: 'bg-amber-500 text-white' },
-    { id: 2, title: 'Rome Exploration', startDate: '2026-07-22', endDate: '2026-07-28', color: 'bg-purple-600 text-white' },
-    { id: 3, title: 'Amalfi Getaway', startDate: '2026-09-02', endDate: '2026-09-09', color: 'bg-emerald-600 text-white' },
-    { id: 4, title: 'Tokyo Autumn Tour', startDate: '2026-10-10', endDate: '2026-10-22', color: 'bg-blue-600 text-white' },
-  ]);
+  const [eventsList, setEventsList] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    tripService.list()
+      .then((data) => {
+        const results = Array.isArray(data) ? data : (data.results ?? []);
+        const colors = ['bg-amber-500', 'bg-emerald-600', 'bg-blue-600', 'bg-purple-600', 'bg-orange-500'];
+        const formatted = results.map((t, idx) => ({
+          id: t.id,
+          title: t.name,
+          startDate: t.start_date,
+          endDate: t.end_date,
+          color: colors[idx % colors.length] + ' text-white',
+        }));
+        setEventsList(formatted);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [newEventTitle, setNewEventTitle] = useState('');
@@ -92,7 +102,7 @@ export default function CalendarPage() {
         <div className={`lg:col-span-2 rounded-3xl p-6 shadow-sm border space-y-6 ${
           isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'
         }`}>
-          
+          {loading && <Loader2 className="w-6 h-6 animate-spin text-amber-500 mx-auto" />}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`p-2.5 rounded-2xl ${isDark ? 'bg-slate-800 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>
@@ -200,29 +210,7 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          <div className={`rounded-3xl p-6 shadow-sm border space-y-4 ${
-            isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'
-          }`}>
-            <h3 className={`font-extrabold text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>Upcoming Activities</h3>
-            <div className="space-y-3">
-              {mockActivities.slice(0, 4).map(act => (
-                <div key={act.id} className={`flex items-center gap-3 p-3 rounded-2xl ${
-                  isDark ? 'bg-slate-800' : 'bg-gray-50'
-                }`}>
-                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0 font-bold text-xs">
-                    {act.city.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-xs font-bold truncate ${isDark ? 'text-slate-200' : 'text-gray-800'}`}>{act.name}</p>
-                    <p className="text-[10px] text-gray-400">{act.city} • {act.date}</p>
-                  </div>
-                  <span className="text-xs font-extrabold text-amber-500 shrink-0">${act.cost}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
-
       </div>
 
       {/* Modal */}

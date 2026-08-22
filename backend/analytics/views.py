@@ -34,11 +34,11 @@ class AdminAnalyticsViewSet(viewsets.ViewSet):
     @action(detail=False, methods=["get"])
     def users(self, request):
         User = get_user_model()
-        return Response(list(User.objects.values("id", "name", "email", "is_active", "is_admin", "created_at")[:100]))
+        return Response(list(User.objects.values("id", "name", "email", "is_active", "is_admin", "is_superuser", "date_joined", "created_at")[:100]))
 
     @action(detail=False, methods=["get"])
     def trips(self, request):
-        return Response(list(Trip.objects.select_related("user").values("id", "name", "user__email", "start_date", "end_date", "is_public")[:100]))
+        return Response(list(Trip.objects.select_related("user").values("id", "name", "user_id", "user__email", "start_date", "end_date", "status", "is_public")[:200]))
 
     @action(detail=False, methods=["get"], url_path="popular-destinations")
     def popular_destinations(self, request):

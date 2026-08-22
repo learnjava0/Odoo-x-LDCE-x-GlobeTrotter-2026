@@ -1,5 +1,5 @@
 import { useState, useEffect, Fragment } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Search, ArrowDown, MapPin, Calendar, Clock, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { tripService } from '../api/client';
@@ -10,6 +10,8 @@ export default function ItineraryViewPage() {
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     tripService.get(tripId || 1)
@@ -76,14 +78,24 @@ export default function ItineraryViewPage() {
               Itinerary for a selected place: <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">{trip.name}</span>
             </h1>
             <p className="text-gray-400 text-sm mt-1 flex items-center gap-4">
-              <span className="flex items-center gap-1"><Calendar className="w-4 h-4 text-amber-500" /> {trip.startDate} → {trip.endDate}</span>
-              <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-amber-500" /> Paris, France</span>
+              <span className="flex items-center gap-1"><Calendar className="w-4 h-4 text-amber-500" /> {trip.start_date} → {trip.end_date}</span>
+              <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-amber-500" /> {trip.cities_count || (trip.stops?.length || 0)} Destinations</span>
             </p>
           </div>
           
-          <div className={`border rounded-2xl px-5 py-3 text-right ${isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-amber-50 border-amber-200/60'}`}>
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Total Estimated Expense</span>
-            <span className="text-2xl font-black text-amber-500">${trip.totalBudget.toLocaleString()}</span>
+          <div className="flex flex-col items-end gap-3">
+            <button
+              onClick={() => navigate(`/builder/${tripId || 1}`)}
+              className={`px-5 py-2.5 font-bold rounded-2xl transition-colors flex items-center gap-2 text-sm w-full md:w-auto justify-center ${
+                isDark ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+              }`}
+            >
+              Edit in Builder
+            </button>
+            <div className={`border rounded-2xl px-5 py-3 text-right w-full md:w-auto ${isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-amber-50 border-amber-200/60'}`}>
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Total Estimated Expense</span>
+              <span className="text-2xl font-black text-amber-500">₹{Number(trip.estimated_budget || 0).toLocaleString()}</span>
+            </div>
           </div>
         </div>
 
@@ -122,7 +134,7 @@ export default function ItineraryViewPage() {
                         isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200/80'
                       }`}>
                         <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Expense</span>
-                        <span className={`text-lg font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>${act.expense.toFixed(2)}</span>
+                        <span className={`text-lg font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>₹{act.expense.toFixed(2)}</span>
                       </div>
                     </div>
 

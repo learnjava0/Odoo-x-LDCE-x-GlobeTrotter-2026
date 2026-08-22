@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Star, DollarSign, Loader2 } from 'lucide-react';
+import { Search, Filter, Star, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { destinationService } from '../api/client';
 
@@ -86,7 +86,7 @@ export default function CitySearchPage() {
                 <p className={`text-xs leading-relaxed line-clamp-2 ${isDark ? 'text-slate-400' : 'text-gray-400'}`}>{city.description || 'A beautiful city to visit.'}</p>
                 <div className={`pt-4 border-t flex items-center justify-between text-xs ${isDark ? 'border-slate-800' : 'border-gray-50'}`}>
                   <span className="text-gray-400">Daily Cost Index</span>
-                  <span className="font-extrabold text-amber-500 text-sm flex items-center"><DollarSign className="w-3.5 h-3.5" />{city.cost_index}/day</span>
+                  <span className="font-extrabold text-amber-500 text-sm flex items-center">₹{city.cost_index}/day</span>
                 </div>
               </div>
             </div>

@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { Search, ShieldCheck, Users, MapPin, Activity, TrendingUp, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, ShieldCheck, Users, MapPin, Activity, TrendingUp, CheckCircle2, Loader2, X } from 'lucide-react';
 import { PieChart, Pie, Cell, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../context/ThemeContext.jsx';
+import { adminService } from '../api/client';
 
 const cities = [
   { id: 1, name: "Paris", country: "France", costIndex: 145.00, popularity: 98, imageUrl: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80" },
@@ -14,13 +16,7 @@ const activities = [
   { id: 2, name: "Louvre Museum", cost: 17.00, imageUrl: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=600&q=80" },
   { id: 3, name: "Seine River Cruise", cost: 15.00, imageUrl: "https://images.unsplash.com/photo-1478391679764-b2d8b3cd1e94?auto=format&fit=crop&w=600&q=80" },
 ];
-const INITIAL_USERS = [
-  { id: 1, name: 'Ajay Panchal', email: 'ajaypanchal@gmail.com', role: 'Admin', tripsCount: 12, status: 'Active', joined: 'Jan 15, 2026' },
-  { id: 2, name: 'Sarah Jenkins', email: 'sarah.j@example.com', role: 'User', tripsCount: 5, status: 'Active', joined: 'Feb 02, 2026' },
-  { id: 3, name: 'Marcus Chen', email: 'mchen@example.com', role: 'User', tripsCount: 8, status: 'Active', joined: 'Feb 19, 2026' },
-  { id: 4, name: 'Elena Rostova', email: 'elena@example.com', role: 'User', tripsCount: 3, status: 'Active', joined: 'Mar 10, 2026' },
-  { id: 5, name: 'David Kim', email: 'dkim@example.com', role: 'User', tripsCount: 1, status: 'Pending', joined: 'Apr 01, 2026' },
-];
+
 
 const pieChartData = [
   { name: 'Active Travelers', value: 450, color: '#0EA5E9' },
@@ -90,8 +86,31 @@ function OrlandoConcentricRings({ isDark }) {
 
 export default function AdminDashboardPage() {
   const { isDark } = useTheme();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('User Trends and Analytics');
   const [searchQuery, setSearchQuery] = useState('');
+  const [users, setUsers] = useState([]);
+  const [allTrips, setAllTrips] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [tripsModal, setTripsModal] = useState(null); // { userName, trips[] }
+
+  // Fetch users + all trips when Manage Users tab is opened
+  useEffect(() => {
+    if (activeTab === 'Manage Users') {
+      setLoadingUsers(true);
+      Promise.all([adminService.users(), adminService.trips()])
+        .then(([usersData, tripsData]) => {
+          setUsers(Array.isArray(usersData) ? usersData : (usersData.results ?? []));
+          setAllTrips(Array.isArray(tripsData) ? tripsData : (tripsData.results ?? []));
+        })
+        .catch(console.error)
+        .finally(() => setLoadingUsers(false));
+    }
+  }, [activeTab]);
+
+  const filteredUsers = users.filter(u =>
+    (u.name || u.email || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const tabs = [
     { id: 'Manage Users', label: 'Manage Users', icon: Users },
@@ -167,16 +186,20 @@ export default function AdminDashboardPage() {
         })}
       </div>
 
-      {/* Tab 1: Manage Users */}
       {activeTab === 'Manage Users' && (
         <div className={`rounded-3xl p-8 shadow-sm border space-y-6 ${
           isDark ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-gray-100 text-gray-900'
         }`}>
           <div className={`border-b pb-4 ${isDark ? 'border-slate-800' : 'border-gray-50'}`}>
             <h2 className="text-xl font-black">Manage User Section</h2>
-            <p className="text-xs text-gray-400 mt-1">This Section is responsible for managing the users and their actions.</p>
+            <p className="text-xs text-gray-400 mt-1">Live user data from the database — manage users and view their trips.</p>
           </div>
 
+          {loadingUsers ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+            </div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -185,40 +208,101 @@ export default function AdminDashboardPage() {
                   <th className="text-left text-[11px] font-semibold uppercase pb-3 pr-4">Email</th>
                   <th className="text-left text-[11px] font-semibold uppercase pb-3 pr-4">Trips Created</th>
                   <th className="text-left text-[11px] font-semibold uppercase pb-3 pr-4">Role</th>
-                  <th className="text-left text-[11px] font-semibold uppercase pb-3 pr-4">Status</th>
+                  <th className="text-left text-[11px] font-semibold uppercase pb-3 pr-4">Joined</th>
                   <th className="text-right text-[11px] font-semibold uppercase pb-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {INITIAL_USERS.map(user => (
+                {filteredUsers.map(user => {
+                  const userTrips = allTrips.filter(t => t.user_id === user.id);
+                  return (
                   <tr key={user.id} className={`border-b last:border-0 ${isDark ? 'border-slate-800 hover:bg-slate-800/50' : 'border-gray-50 hover:bg-gray-50/50'}`}>
-                    <td className="py-4 pr-4 text-xs font-bold flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-500 font-bold flex items-center justify-center text-xs">
-                        {user.name.charAt(0)}
+                    <td className="py-4 pr-4 text-xs font-bold">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-500 font-bold flex items-center justify-center text-xs shrink-0">
+                          {(user.name || user.email || '?').charAt(0).toUpperCase()}
+                        </div>
+                        {user.name || '—'}
                       </div>
-                      {user.name}
                     </td>
                     <td className="py-4 pr-4 text-xs text-gray-400">{user.email}</td>
-                    <td className="py-4 pr-4 text-xs font-extrabold">{user.tripsCount} Trips</td>
+                    <td className="py-4 pr-4 text-xs font-extrabold">{userTrips.length} Trips</td>
                     <td className="py-4 pr-4 text-xs">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400">
-                        {user.role}
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                        (user.is_admin || user.is_superuser) ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
+                      }`}>
+                        {(user.is_admin || user.is_superuser) ? 'Admin' : 'User'}
                       </span>
                     </td>
-                    <td className="py-4 pr-4 text-xs">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 w-fit bg-emerald-500/20 text-emerald-400">
-                        <CheckCircle2 className="w-3 h-3" /> {user.status}
-                      </span>
+                    <td className="py-4 pr-4 text-xs text-gray-400">
+                      {user.date_joined ? new Date(user.date_joined).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                     </td>
                     <td className="py-4 text-right">
-                      <button className="px-3 py-1.5 bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white rounded-xl text-xs font-bold transition-colors">
+                      <button
+                        onClick={() => setTripsModal({ userName: user.name || user.email, trips: userTrips })}
+                        className="px-3 py-1.5 bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white rounded-xl text-xs font-bold transition-colors"
+                      >
                         View Trips
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
+                {filteredUsers.length === 0 && !loadingUsers && (
+                  <tr><td colSpan={6} className="py-8 text-center text-gray-400 text-sm">No users found.</td></tr>
+                )}
               </tbody>
             </table>
+          </div>
+          )}
+        </div>
+      )}
+
+      {/* Trips Modal */}
+      {tripsModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setTripsModal(null)}>
+          <div onClick={e => e.stopPropagation()} className={`rounded-3xl p-8 shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto ${
+            isDark ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-gray-100'
+          }`}>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className={`text-xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>{tripsModal.userName}'s Trips</h2>
+                <p className="text-xs text-gray-400 mt-1">{tripsModal.trips.length} trip(s) found</p>
+              </div>
+              <button onClick={() => setTripsModal(null)} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+            {tripsModal.trips.length === 0 ? (
+              <p className="text-center text-gray-400 py-8">No trips created yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {tripsModal.trips.map(trip => (
+                  <div key={trip.id} className={`flex items-center justify-between p-4 rounded-2xl border ${
+                    isDark ? 'bg-slate-800 border-slate-700' : 'bg-gray-50 border-gray-100'
+                  }`}>
+                    <div>
+                      <p className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{trip.name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{trip.start_date} → {trip.end_date}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                        trip.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-400' :
+                        trip.status === 'ONGOING' ? 'bg-purple-500/20 text-purple-400' :
+                        trip.status === 'UPCOMING' ? 'bg-amber-500/20 text-amber-400' :
+                        'bg-blue-500/20 text-blue-400'
+                      }`}>{trip.status}</span>
+                      <button
+                        onClick={() => { setTripsModal(null); navigate(`/itinerary/${trip.id}`); }}
+                        className="px-3 py-1.5 bg-amber-500 text-white rounded-xl text-xs font-bold hover:bg-amber-600 transition-colors"
+                      >
+                        Open →
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -235,7 +319,7 @@ export default function AdminDashboardPage() {
                 <img src={city.imageUrl} alt={city.name} className="w-16 h-16 rounded-xl object-cover" />
                 <div>
                   <h3 className="font-extrabold text-sm">{city.name}</h3>
-                  <p className="text-xs text-gray-400">{city.country} • ${city.costIndex}/day</p>
+                  <p className="text-xs text-gray-400">{city.country} • ₹{city.costIndex}/day</p>
                 </div>
               </div>
             ))}
@@ -255,7 +339,7 @@ export default function AdminDashboardPage() {
                 <img src={act.imageUrl} alt={act.name} className="w-16 h-16 rounded-xl object-cover" />
                 <div>
                   <h3 className="font-extrabold text-xs">{act.name}</h3>
-                  <p className="text-[11px] text-amber-500 font-bold">${act.cost === 0 ? 'Free' : `$${act.cost}`}</p>
+                  <p className="text-[11px] text-amber-500 font-bold">{act.cost === 0 ? 'Free' : `₹${act.cost}`}</p>
                 </div>
               </div>
             ))}

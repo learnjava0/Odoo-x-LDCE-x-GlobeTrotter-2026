@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.utils.text import slugify
 
 from activities.models import Activity
@@ -35,9 +36,22 @@ class Trip(models.Model):
     class Meta:
         ordering = ["-start_date"]
 
+    def compute_status(self):
+        """Auto-derive status from trip dates relative to today."""
+        today = timezone.localdate()
+        if self.end_date < today:
+            return self.COMPLETED
+        elif self.start_date <= today <= self.end_date:
+            return self.ONGOING
+        elif self.start_date > today:
+            return self.UPCOMING
+        return self.PLANNING
+
     def save(self, *args, **kwargs):
         if self.is_public and not self.public_slug:
             self.public_slug = unique_slug(self.name)
+        # Auto-set status based on dates (always keep dates as source of truth)
+        self.status = self.compute_status()
         super().save(*args, **kwargs)
 
     @property

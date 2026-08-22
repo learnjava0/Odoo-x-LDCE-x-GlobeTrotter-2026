@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Calendar, MapPin, DollarSign, Search, ArrowRight, Loader2, Compass } from 'lucide-react';
+import { Plus, Calendar, MapPin, DollarSign, Search, ArrowRight, Loader2, Compass, Trash2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { tripService } from '../api/client';
 
@@ -37,6 +37,17 @@ export default function MyTripsPage() {
     const matchesSearch = trip.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
   });
+
+  const handleDeleteTrip = async (id) => {
+    if (!window.confirm('Are you sure you want to permanently delete this trip?')) return;
+    try {
+      await tripService.delete(id);
+      setTrips(prev => prev.filter(t => t.id !== id));
+    } catch (e) {
+      console.error(e);
+      alert('Failed to delete trip.');
+    }
+  };
 
   const getCoverImage = (trip) =>
     trip.cover_image || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80';
@@ -107,7 +118,7 @@ export default function MyTripsPage() {
               ? trip.stops.map(s => s.city_detail?.city_name || s.city_detail?.name).filter(Boolean).join(', ')
               : '';
             return (
-              <div key={trip.id} onClick={() => navigate(`/itinerary/${trip.id}`)}
+              <div key={trip.id} onClick={() => navigate(statusKey === 'PLANNING' ? `/builder/${trip.id}` : `/itinerary/${trip.id}`)}
                 className={`rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group border flex flex-col justify-between ${
                   isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'
                 }`}>
@@ -118,6 +129,15 @@ export default function MyTripsPage() {
                       <span className={`text-[11px] font-bold px-3 py-1.5 rounded-full ${statusColors[statusKey] || 'bg-amber-500/20 text-amber-500'}`}>
                         {trip.status}
                       </span>
+                    </div>
+                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleDeleteTrip(trip.id); }}
+                        className="p-2 bg-red-500/90 text-white rounded-full shadow-lg hover:bg-red-600 hover:scale-110 transition-all"
+                        title="Delete Trip"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                   <div className="p-5">
@@ -135,7 +155,7 @@ export default function MyTripsPage() {
                   <div className="flex items-center gap-1.5">
                     <DollarSign className="w-3.5 h-3.5 text-amber-500" />
                     <span className="text-[12px] text-gray-400">Budget</span>
-                    <span className="text-[14px] font-extrabold text-amber-500 ml-1">${Number(trip.estimated_budget || 0).toLocaleString()}</span>
+                    <span className="text-[14px] font-extrabold text-amber-500 ml-1">₹{Number(trip.estimated_budget || 0).toLocaleString()}</span>
                   </div>
                   <div className={`p-1.5 rounded-lg group-hover:bg-amber-500 group-hover:text-white transition-colors ${isDark ? 'bg-slate-800 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>
                     <ArrowRight className="w-3.5 h-3.5" />

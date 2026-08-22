@@ -65,7 +65,7 @@ export default function PublicTripPage() {
               <p className="text-white/80 text-[14px] flex items-center gap-4 mt-2">
                 <span className="flex items-center gap-1"><Calendar className="w-4 h-4" />{trip.start_date} → {trip.end_date}</span>
                 <span className="flex items-center gap-1"><MapPin className="w-4 h-4" />{tripStops.length} stops</span>
-                <span className="flex items-center gap-1"><DollarSign className="w-4 h-4" />${trip.total_budget}</span>
+                <span className="flex items-center gap-1"><DollarSign className="w-4 h-4" />₹{trip.total_budget}</span>
               </p>
             </div>
           </div>
@@ -89,7 +89,7 @@ export default function PublicTripPage() {
                         <p className="text-[13px] font-semibold text-gray-800">Activity ID: {act.activity}</p>
                         <p className="text-[11px] text-gray-400 flex items-center gap-3">
                           <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Time: {act.time}</span>
-                          <span>${act.expense || 0}</span>
+                          <span>₹{act.expense || 0}</span>
                         </p>
                       </div>
                     </div>

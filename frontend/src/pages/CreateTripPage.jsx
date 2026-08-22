@@ -210,7 +210,7 @@ export default function CreateTripPage() {
                       <span className="flex items-center gap-1 font-semibold text-gray-400"><Clock className="w-3.5 h-3.5" /> {act.duration} min</span>
                       <span className="font-black text-amber-500 text-sm flex items-center">
                         <DollarSign className="w-3.5 h-3.5" />
-                        {Number(act.estimated_cost) === 0 ? 'Free' : `$${Number(act.estimated_cost).toLocaleString()}`}
+                        {Number(act.estimated_cost) === 0 ? 'Free' : `₹${Number(act.estimated_cost).toLocaleString()}`}
                       </span>
                     </div>
                   </div>
@@ -218,6 +218,16 @@ export default function CreateTripPage() {
               })}
             </div>
           )}
+        </div>
+
+        <div className={`p-5 mt-6 rounded-2xl flex items-center justify-between border ${isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-amber-50/50 border-amber-200'}`}>
+          <div>
+            <h3 className="text-sm font-extrabold text-amber-500 uppercase tracking-wider">Rough Trip Estimation</h3>
+            <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Based on selected suggested activities</p>
+          </div>
+          <div className="text-2xl font-black text-amber-500">
+            ₹{addedSuggestions.reduce((acc, id) => acc + Number(suggestedActivities.find(a => a.id === id)?.estimated_cost || 0), 0).toLocaleString()}
+          </div>
         </div>
 
         <div className="pt-4 flex justify-end">

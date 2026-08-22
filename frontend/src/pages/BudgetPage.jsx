@@ -1,5 +1,7 @@
 
 
+import { useState, useEffect } from 'react';
+import { tripService } from '../api/client';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../context/ThemeContext.jsx';
 
@@ -17,15 +19,21 @@ const budgetBreakdown = {
   ]
 };
 
-const dashboardStats = {
-  totalTrips: 4,
-  citiesVisited: 8,
-  activitiesPlanned: 24,
-  totalBudget: 8150,
-};
-
 export default function BudgetPage() {
   const { isDark } = useTheme();
+  
+  const [totalAmountSpent, setTotalAmountSpent] = useState(0);
+  const totalBudgetAllocated = 650000; // Mock overarching wallet balance limit
+
+  useEffect(() => {
+    tripService.list().then((data) => {
+      const tripsData = Array.isArray(data) ? data : (data.results ?? []);
+      const spent = tripsData.reduce((acc, trip) => acc + Number(trip.estimated_budget || 0), 0);
+      setTotalAmountSpent(spent);
+    }).catch(console.error);
+  }, []);
+
+  const remainingBalance = totalBudgetAllocated - totalAmountSpent;
 
   return (
     <div className="animate-fade-in space-y-8">
@@ -37,16 +45,16 @@ export default function BudgetPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className={`rounded-3xl p-6 border shadow-sm ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total Budget Allocated</p>
-          <p className="text-3xl font-black text-amber-500">${dashboardStats.totalBudget.toLocaleString()}</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total Budget Wallet</p>
+          <p className="text-3xl font-black text-amber-500">₹{totalBudgetAllocated.toLocaleString()}</p>
         </div>
         <div className={`rounded-3xl p-6 border shadow-sm ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total Amount Spent</p>
-          <p className="text-3xl font-black text-emerald-500">$3,450.00</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total Estimated Sent</p>
+          <p className="text-3xl font-black text-emerald-500">₹{totalAmountSpent.toLocaleString()}</p>
         </div>
         <div className={`rounded-3xl p-6 border shadow-sm ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Remaining Balance</p>
-          <p className="text-3xl font-black text-purple-500">$1,750.00</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Remaining Available Credit</p>
+          <p className={`text-3xl font-black ${remainingBalance < 0 ? 'text-red-500' : 'text-purple-500'}`}>₹{remainingBalance.toLocaleString()}</p>
         </div>
       </div>
 
@@ -71,7 +79,7 @@ export default function BudgetPage() {
               <div key={i} className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
                 <span className={`text-xs ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>{cat.name}</span>
-                <span className="text-xs font-bold text-amber-500 ml-auto">${cat.value}</span>
+                <span className="text-xs font-bold text-amber-500 ml-auto">₹{cat.value}</span>
               </div>
             ))}
           </div>
