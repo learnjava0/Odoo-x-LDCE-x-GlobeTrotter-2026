@@ -75,8 +75,10 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "globetrotter",
-        "USER": "dev-trivedi",
-        "PASSWORD": "",
+        "USER": "postgres",
+        "PASSWORD": "12345678",
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
 

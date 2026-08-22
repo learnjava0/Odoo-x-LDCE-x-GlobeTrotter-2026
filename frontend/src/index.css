@@ -62,3 +62,4 @@ a, button, input, select, textarea {
 .animate-slide-in {
   animation: slideInLeft 0.3s ease-out;
 }
+/* React Entry Point */
