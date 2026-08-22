@@ -17,7 +17,9 @@ export default function CitySearchPage() {
   }, []);
 
   const filtered = cities.filter(c => {
-    const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.country.toLowerCase().includes(search.toLowerCase());
+    const cityName = c.city_name || c.name || '';
+    const countryName = c.country || '';
+    const matchSearch = cityName.toLowerCase().includes(search.toLowerCase()) || countryName.toLowerCase().includes(search.toLowerCase());
     const matchCountry = country === 'All' || c.country === country;
     return matchSearch && matchCountry;
   });
@@ -70,7 +72,7 @@ export default function CitySearchPage() {
               isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'
             }`}>
               <div className="relative h-48 overflow-hidden">
-                <img src={city.image_url || 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=800&q=80'} alt={city.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={city.image || city.image_url || 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=800&q=80'} alt={city.city_name || city.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-slate-800 text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
                   <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                   {city.popularity_score}% Popularity
@@ -78,7 +80,7 @@ export default function CitySearchPage() {
               </div>
               <div className="p-6 space-y-4">
                 <div>
-                  <h3 className={`font-extrabold text-lg group-hover:text-amber-500 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{city.name}</h3>
+                  <h3 className={`font-extrabold text-lg group-hover:text-amber-500 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{city.city_name || city.name}</h3>
                   <p className="text-xs text-amber-500 font-bold mt-0.5">{city.country}</p>
                 </div>
                 <p className={`text-xs leading-relaxed line-clamp-2 ${isDark ? 'text-slate-400' : 'text-gray-400'}`}>{city.description || 'A beautiful city to visit.'}</p>

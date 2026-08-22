@@ -1,6 +1,5 @@
 import { Navigate, Routes, Route } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import DashboardLayout from '../components/layout/DashboardLayout.jsx';
 import { Loader2 } from 'lucide-react';
 
 import DashboardPage from '../pages/DashboardPage';
@@ -33,7 +32,7 @@ function ProtectedRoute({ children }) {
   }
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return <>{children}</>;
 }
 
 // ─── Guard: must be admin ──────────────────────────────────────────────────────
@@ -50,7 +49,7 @@ function AdminRoute({ children }) {
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!user?.is_admin) return <Navigate to="/" replace />;
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return <>{children}</>;
 }
 
 // ─── Guard: already logged in → redirect away from auth pages ─────────────────

@@ -10,9 +10,9 @@ export default function PublicTripPage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    publicService.getBySlug(slug)
+    publicService.getTrip(slug)
       .then(setTrip)
-      .catch((err) => setError('Trip not found or is private.'))
+      .catch(() => setError('Trip not found or is private.'))
       .finally(() => setLoading(false));
   }, [slug]);
 

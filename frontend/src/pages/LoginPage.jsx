@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Compass, User, Lock, ArrowRight, Eye, EyeOff, Camera } from 'lucide-react';
+import { Compass, User, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function LoginPage() {
@@ -9,16 +9,8 @@ export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const handlePhotoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPhotoPreview(URL.createObjectURL(file));
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,22 +68,11 @@ export default function LoginPage() {
         {/* Floating Login Card */}
         <div className="w-full max-w-md bg-white py-10 px-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-gray-100/80 my-auto">
           
-          {/* Centered Circular Photo / Avatar */}
+          {/* Centered Logo */}
           <div className="flex flex-col items-center mb-6">
-            <div className="relative group cursor-pointer">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 border-2 border-amber-500/30 flex items-center justify-center overflow-hidden shadow-md group-hover:border-amber-500 transition-colors">
-                {photoPreview ? (
-                  <img src={photoPreview} alt="User avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-12 h-12 text-amber-600/70" />
-                )}
-              </div>
-              <label htmlFor="login-photo-upload" className="absolute bottom-0 right-0 bg-gradient-to-r from-amber-500 to-orange-600 text-white p-2 rounded-full shadow-md cursor-pointer hover:scale-110 transition-transform">
-                <Camera className="w-3.5 h-3.5" />
-                <input id="login-photo-upload" type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
-              </label>
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 border-4 border-amber-50 flex items-center justify-center shadow-xl shadow-amber-500/20">
+              <Compass className="w-10 h-10 text-white" />
             </div>
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mt-2">User Photo</span>
           </div>
 
           <div className="mb-6">

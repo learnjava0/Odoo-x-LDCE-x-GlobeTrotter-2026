@@ -36,7 +36,7 @@ export default function DashboardPage() {
 
   const filteredTrips = trips.filter(trip => {
     const matchesSearch =
-      trip.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (trip.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (trip.description || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter =
       selectedFilter === 'All' ||

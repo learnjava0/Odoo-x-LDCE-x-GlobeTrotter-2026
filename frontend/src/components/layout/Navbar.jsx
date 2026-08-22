@@ -1,7 +1,7 @@
 
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useTheme } from '../../context/ThemeContext.jsx';
-import { Bell, Filter, Download, CalendarDays, Menu, Sun, Moon } from 'lucide-react';
+import { Menu, Sun, Moon } from 'lucide-react';
 
 export default function Navbar({ onMenuClick }) {
   const { user } = useAuth();
@@ -52,37 +52,7 @@ export default function Navbar({ onMenuClick }) {
             {isDark ? <Sun className="w-4 h-4 md:w-[18px] md:h-[18px]" /> : <Moon className="w-4 h-4 md:w-[18px] md:h-[18px]" />}
           </button>
 
-          {/* Date range */}
-          <button className={`hidden sm:flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl text-[12px] md:text-[13px] font-medium border transition-colors ${
-            isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-gray-50 border-gray-100 text-gray-600'
-          }`}>
-            <CalendarDays className="w-4 h-4 text-amber-500" />
-            <span>Sep 11 — Oct 10</span>
-          </button>
 
-          {/* Filter */}
-          <button className={`hidden md:flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl text-[12px] md:text-[13px] font-medium border transition-colors ${
-            isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-gray-50 border-gray-100 text-gray-600'
-          }`}>
-            <Filter className="w-4 h-4 text-amber-500" />
-            <span>Filter</span>
-          </button>
-
-          {/* Export */}
-          <button className={`hidden md:flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl text-[12px] md:text-[13px] font-medium border transition-colors ${
-            isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-gray-50 border-gray-100 text-gray-600'
-          }`}>
-            <Download className="w-4 h-4 text-amber-500" />
-            <span>Export</span>
-          </button>
-
-          {/* Notification bell */}
-          <button className={`relative p-2 md:p-2.5 rounded-xl border transition-colors ${
-            isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-gray-50 border-gray-100 text-gray-500'
-          }`}>
-            <Bell className="w-4 h-4 md:w-[18px] md:h-[18px]" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-500 rounded-full" />
-          </button>
 
           {/* User avatar */}
           <div className="flex items-center gap-2.5 ml-1 md:ml-2 pl-2 md:pl-4 border-l border-gray-200/50">

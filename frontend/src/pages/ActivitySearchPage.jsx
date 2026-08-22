@@ -19,7 +19,9 @@ export default function ActivitySearchPage() {
   const categories = ['All', ...new Set(activities.map(a => a.category))];
 
   const filtered = activities.filter(act => {
-    const matchSearch = act.name.toLowerCase().includes(search.toLowerCase()) || act.description.toLowerCase().includes(search.toLowerCase());
+    const actName = act.name || '';
+    const actDesc = act.description || '';
+    const matchSearch = actName.toLowerCase().includes(search.toLowerCase()) || actDesc.toLowerCase().includes(search.toLowerCase());
     const matchCat = category === 'All' || act.category === category;
     return matchSearch && matchCat;
   });

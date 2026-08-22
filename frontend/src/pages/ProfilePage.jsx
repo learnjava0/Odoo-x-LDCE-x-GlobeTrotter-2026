@@ -7,7 +7,7 @@ import { tripService, userService } from '../api/client';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
   const [name, setName] = useState(user?.name || '');
@@ -21,8 +21,9 @@ export default function ProfilePage() {
 
   // Keep name in sync when user is loaded from AuthContext
   useEffect(() => {
-    if (user?.name) setName(user.name);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (user?.name) {
+      setTimeout(() => setName(user.name), 0);
+    }
   }, [user?.name]);
 
   useEffect(() => {
@@ -45,6 +46,9 @@ export default function ProfilePage() {
     setSaving(true);
     try {
       await userService.updateMe({ name });
+      if (refreshUser) {
+        await refreshUser();
+      }
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3000);
     } catch (err) {
